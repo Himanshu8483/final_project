@@ -1,0 +1,77 @@
+{
+  "jobs": [
+    {
+      "id": "7cb7",
+      "title": "Frontend",
+      "description": "HTML, CSS, JS"
+    },
+    {
+      "title": "Backend",
+      "description": "Python, Django",
+      "id": "5630"
+    },
+    {
+      "id": "4c89",
+      "title": "Database",
+      "description": "MySQL, dbsqlite3"
+    }
+  ],
+  "applications": [
+    {
+      "id": "0c62",
+      "userId": 1,
+      "jobId": "5630"
+    },
+    {
+      "id": "3737",
+      "userId": 1,
+      "jobId": "7cb7"
+    }
+  ],
+  "users": [
+    {
+      "id": "ac54",
+      "name": "Himanshu",
+      "email": "himanshu@gmail.com",
+      "password": "123456"
+    },
+    {
+      "id": "334c",
+      "email": "himanshu@gmail.com",
+      "password": "123456"
+    },
+    {
+      "id": "ca44",
+      "name": "Himanshu",
+      "email": "himanshukushwaha@gmail.com",
+      "password": "Him@123",
+      "role": "seeker",
+      "isAdmin": false
+    }
+  ],
+  "orders": [
+    {
+      "id": "1852",
+      "name": "Premium Upgrade",
+      "amount": 499,
+      "status": "pending",
+      "date": "2025-06-18T07:45:16.288Z"
+    },
+    {
+      "id": "fb4d",
+      "name": "Premium Upgrade",
+      "amount": 499,
+      "status": "pending",
+      "date": "2025-06-19T03:45:46.954Z"
+    },
+    {
+      "id": "5efa",
+      "userId": 1,
+      "name": "Premium Upgrade",
+      "amount": 499,
+      "status": "active",
+      "startDate": "2025-06-19T04:18:57.683Z",
+      "expiryDate": "2025-06-26T04:18:57.683Z"
+    }
+  ]
+}
