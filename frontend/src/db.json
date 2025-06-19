@@ -51,27 +51,14 @@
   ],
   "orders": [
     {
-      "id": "1852",
-      "name": "Premium Upgrade",
-      "amount": 499,
-      "status": "pending",
-      "date": "2025-06-18T07:45:16.288Z"
-    },
-    {
-      "id": "fb4d",
-      "name": "Premium Upgrade",
-      "amount": 499,
-      "status": "pending",
-      "date": "2025-06-19T03:45:46.954Z"
-    },
-    {
-      "id": "5efa",
-      "userId": 1,
-      "name": "Premium Upgrade",
-      "amount": 499,
+      "id": "7b46",
+      "userId": "ca44",
+      "name": "Monthly Subscription",
+      "amount": 299,
+      "plan": "monthly",
       "status": "active",
-      "startDate": "2025-06-19T04:18:57.683Z",
-      "expiryDate": "2025-06-26T04:18:57.683Z"
+      "startDate": "2025-06-19T04:36:12.450Z",
+      "expiryDate": "2025-07-19T04:36:12.450Z"
     }
   ]
 }
