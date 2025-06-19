@@ -1,1 +1,16 @@
+# Node.js
+node_modules/
 .env
+
+# Build files
+dist/
+build/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Logs and backups
+*.log
+*.zip
+*.rar
