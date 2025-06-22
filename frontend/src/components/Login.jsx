@@ -50,10 +50,10 @@ const handleSubmit = async (e) => {
     // ✅ ONE navigate
     const dashboardPath =
       user.role === "admin"
-        ? "/admin-dashboard"
+        ? "/admindashboard"
         : user.role === "employer"
-        ? "/employer-dashboard"
-        : "/jobseeker-dashboard";
+        ? "/empdashboard"
+        : "/jobs";
 
     navigate(dashboardPath);
   } else {

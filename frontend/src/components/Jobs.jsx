@@ -2,78 +2,192 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 function Jobs() {
-  const user = JSON.parse(localStorage.getItem("user")); // should be job seeker
   const [jobs, setJobs] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [form, setForm] = useState({});
+  const [showFormId, setShowFormId] = useState(null);
+  const [resumeFiles, setResumeFiles] = useState({});
+  const [posts, setPosts] = useState([]);
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const userId = user?.id;
 
   useEffect(() => {
     fetchJobs();
-    if (user?.id) fetchApplications();
+    fetchApplications();
+    fetchPosts();
   }, []);
 
-  const fetchJobs = () => {
-    axios.get("http://localhost:3000/jobs").then(res => setJobs(res.data));
+  const fetchJobs = async () => {
+    const res = await axios.get("http://localhost:3000/jobs");
+    setJobs(res.data);
   };
 
-  const fetchApplications = () => {
-    axios.get(`http://localhost:3000/applications?userId=${user.id}`)
-      .then(res => setApplications(res.data));
+  const fetchApplications = async () => {
+    const res = await axios.get(`http://localhost:3000/applications?userId=${userId}`);
+    setApplications(res.data);
   };
 
-  const handleApply = (jobId) => {
-    if (applications.some(app => app.jobId === jobId)) return;
+  const fetchPosts = async () => {
+    const res = await axios.get(`http://localhost:3000/posts?jobSeekerId=${userId}`);
+    setPosts(res.data);
+  };
 
-    axios.post("http://localhost:3000/applications", {
-      userId: user.id,
-      jobId
-    }).then(() => {
-      alert("Application submitted!");
-      fetchApplications();
+  const isApplied = (jobId) => {
+    return applications.some((app) => app.jobId === jobId);
+  };
+
+  const getPostStatus = (jobId) => {
+    return posts.find((p) => p.jobSeekerId === userId && p.jobId === jobId);
+  };
+
+  const handleResumeChange = (jobId, file) => {
+    setResumeFiles((prev) => ({ ...prev, [jobId]: file }));
+  };
+
+  const handleFormChange = (jobId, field, value) => {
+    setForm({
+      ...form,
+      [jobId]: {
+        ...form[jobId],
+        [field]: value,
+      },
     });
   };
 
-  const handleCancel = (jobId) => {
-    const app = applications.find(a => a.jobId === jobId);
-    if (app) {
-      axios.delete(`http://localhost:3000/applications/${app.id}`)
-        .then(() => {
-          alert("Application cancelled.");
-          fetchApplications();
-        });
+  const toBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+
+  const handleApply = async (job) => {
+    const alreadyApplied = isApplied(job.id);
+    if (alreadyApplied) return;
+
+    await axios.post("http://localhost:3000/applications", {
+      userId,
+      jobId: job.id,
+    });
+
+    let resumeBase64 = "";
+    if (resumeFiles[job.id]) {
+      resumeBase64 = await toBase64(resumeFiles[job.id]);
     }
+
+    await axios.post("http://localhost:3000/posts", {
+      title: `Application for ${job.title}`,
+      description: form[job.id]?.message || "No message provided.",
+      resume: resumeBase64,
+      jobSeekerId: userId,
+      jobId: job.id,
+      employerId: job.employerId,
+      dateSent: new Date().toISOString(),
+      status: "pending",
+    });
+
+    alert("Application submitted!");
+    fetchApplications();
+    fetchPosts();
+    setShowFormId(null);
   };
-
-  const isApplied = (jobId) => applications.some(app => app.jobId === jobId);
-
-  if (user?.role !== "jobseeker") {
-    return <div className="text-danger text-center mt-4">Only job seekers can apply for jobs.</div>;
-  }
 
   return (
     <div className="container py-4">
-      <h2 className="mb-4">Available Jobs</h2>
+      <h2 className="text-center mb-4">📋 Available Jobs</h2>
       <div className="row">
-        {jobs.map((job) => (
-          <div className="col-md-4 mb-4" key={job.id}>
-            <div className="card shadow-sm h-100">
-              <div className="card-body">
-                <h5>{job.title}</h5>
-                <p>{job.description}</p>
-              </div>
-              <div className="card-footer">
-                {isApplied(job.id) ? (
-                  <button className="btn btn-outline-danger btn-sm" onClick={() => handleCancel(job.id)}>
-                    Cancel Application
-                  </button>
-                ) : (
-                  <button className="btn btn-success btn-sm" onClick={() => handleApply(job.id)}>
-                    Apply Now
-                  </button>
-                )}
+        {jobs.map((job) => {
+          const applied = isApplied(job.id);
+          const post = getPostStatus(job.id);
+
+          return (
+            <div className="col-md-4 mb-4" key={job.id}>
+              <div className="card shadow-sm h-100">
+                <div className="card-body">
+                  <h5 className="card-title">{job.title}</h5>
+                  <p className="card-text">{job.description}</p>
+
+                  {post && (
+                    <div className="mb-2">
+                      <strong>Status: </strong>
+                      <span
+                        className={
+                          post.status === "accepted"
+                            ? "text-success"
+                            : post.status === "rejected"
+                            ? "text-danger"
+                            : "text-warning"
+                        }
+                      >
+                        {post.status}
+                      </span>
+                      {post.status === "accepted" && post.interviewDate && (
+                        <>
+                          <br />
+                          <strong>Interview:</strong>{" "}
+                          {new Date(post.interviewDate).toLocaleString()}
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {applied ? (
+                    post?.status === "rejected" ? (
+                      <div className="text-danger">❌ Rejected by employer</div>
+                    ) : (
+                      <button className="btn btn-outline-secondary btn-sm" disabled>
+                        ✅ Applied
+                      </button>
+                    )
+                  ) : showFormId === job.id ? (
+                    <>
+                      <textarea
+                        className="form-control mb-2"
+                        placeholder="Your message"
+                        onChange={(e) =>
+                          handleFormChange(job.id, "message", e.target.value)
+                        }
+                      ></textarea>
+
+                      <input
+                        className="form-control mb-2"
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={(e) =>
+                          handleResumeChange(job.id, e.target.files[0])
+                        }
+                      />
+
+                      <div className="d-flex justify-content-between">
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() => handleApply(job)}
+                        >
+                          Submit
+                        </button>
+                        <button
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => setShowFormId(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <button
+                      className="btn btn-primary btn-sm"
+                      onClick={() => setShowFormId(job.id)}
+                    >
+                      Apply Now
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

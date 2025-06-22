@@ -4,73 +4,134 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { FaFacebookF, FaInstagram, FaLinkedin, FaArrowUp } from "react-icons/fa";
 
 function Dashboard() {
-    const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/login");
   };
 
+  const role = user?.role?.toLowerCase();
+
+  const isEmployer = role === "employer";
+  const isAdmin = role === "admin";
+  const isJobSeeker = role === "jobseeker";
+
   return (
     <>
     <div className="d-flex flex-column min-vh-100">
-      <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div className="container">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div className="container">
         <Link className="navbar-brand fw-bold text-warning" to="/">
           Hire<span className="text-white">Hub</span>
         </Link>
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav me-auto">
-<li className="nav-item">
-  <NavLink className="nav-link" to="/" end>Home</NavLink>
-</li>
-<li className="nav-item">
-  <NavLink className="nav-link" to="/about">About</NavLink>
-</li>
-<li className="nav-item">
-  <NavLink className="nav-link" to="/services">Services</NavLink>
-</li>
-<li className="nav-item">
-  <NavLink className="nav-link" to="/jobs">Jobs</NavLink>
-</li>
-<li className="nav-item">
-  <NavLink className="nav-link" to="/postjob">Post Job</NavLink>
-</li>
-<li className="nav-item">
-  <NavLink className="nav-link" to="/premium">Premium</NavLink>
-</li>
-<li className="nav-item">
-  <NavLink className="nav-link" to="/empdashboard">Employer Dashboard</NavLink>
-</li>
 
-            </ul>
-            <ul className="navbar-nav">
-                <div className="ms-auto">
-        {user ? (
-          <>
-            <span className="me-3 text-capitalize">
-              Welcome, {user.name || user.email} ({user.role})
-            </span>
-            <button className="btn btn-outline-danger" onClick={handleLogout}>
-              Logout
-            </button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" className="btn btn-outline-primary me-2">Login</Link>
-            <Link to="/register" className="btn btn-outline-success">Register</Link>
-          </>
-        )}
-      </div>
-      </ul>
-          </div>
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span className="navbar-toggler-icon"></span>
+        </button>
+
+        <div className="collapse navbar-collapse" id="navbarNav">
+          {/* Left side nav */}
+          <ul className="navbar-nav me-auto">
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/" end>
+                Home
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/about">
+                About
+              </NavLink>
+            </li>
+            <li className="nav-item">
+              <NavLink className="nav-link" to="/services">
+                Services
+              </NavLink>
+            </li>
+
+            {isJobSeeker && (
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/jobs">
+                  Jobs
+                </NavLink>
+              </li>
+            )}
+
+            {isEmployer && (
+              <>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/postjob">
+                    Post Job
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/premium">
+                    Premium
+                  </NavLink>
+                </li>
+                <li className="nav-item">
+                  <NavLink className="nav-link" to="/empdashboard">
+                    Employer Dashboard
+                  </NavLink>
+                </li>
+              </>
+            )}
+
+            {isAdmin && (
+              <>
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/adminjobs">
+                  Job Detail
+                </NavLink>
+              </li>
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/admindashboard">
+                  Admin Dashboard
+                </NavLink>
+              </li>
+              </>
+            )}
+          </ul>
+
+          {/* Right side */}
+          <ul className="navbar-nav ms-auto">
+            {user ? (
+              <>
+                <li className="nav-item d-flex align-items-center text-white me-3">
+                  <span>
+                    {user.role}: {user.name || user.email}
+                  </span>
+                </li>
+                <li className="nav-item">
+                  <button className="btn btn-outline-danger" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </li>
+              </>
+            ) : (
+              <>
+                <li className="nav-item me-2">
+                  <Link to="/login" className="btn btn-outline-primary">
+                    Login
+                  </Link>
+                </li>
+                <li className="nav-item">
+                  <Link to="/register" className="btn btn-outline-success">
+                    Register
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
         </div>
-      </nav>
-
+      </div>
+    </nav>
       <main>
         <Outlet />
       </main>

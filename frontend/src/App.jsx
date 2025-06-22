@@ -14,6 +14,9 @@ import About from "./components/About";
 import Services from "./components/Services";
 import './App.css'
 import EmployerDashboard from "./components/EmployerDashboard";
+import AdminDashboard from "./components/AdminDashboard";
+import AdminJobs from "./components/AdminJobs";
+
 function App() {
   return (
     <Router>
@@ -28,6 +31,8 @@ function App() {
           <Route path="services" element={<Services />} />
           <Route path="register" element={<Register />} />
           <Route path="empdashboard" element={<EmployerDashboard />} />
+          <Route path="admindashboard" element={<AdminDashboard />} />
+          <Route path="adminjobs" element={<AdminJobs />} />
 
         </Route>
       </Routes>
