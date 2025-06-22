@@ -18,13 +18,18 @@
   ],
   "applications": [
     {
-      "id": "0c62",
-      "userId": 1,
-      "jobId": "5630"
-    },
-    {
       "id": "3737",
       "userId": 1,
+      "jobId": "7cb7"
+    },
+    {
+      "id": "26a8",
+      "userId": 1,
+      "jobId": "4c89"
+    },
+    {
+      "id": "9655",
+      "userId": "b43a",
       "jobId": "7cb7"
     }
   ],
@@ -47,6 +52,20 @@
       "password": "Him@123",
       "role": "seeker",
       "isAdmin": false
+    },
+    {
+      "id": "4b90",
+      "name": "Himanshu",
+      "email": "himansh@gmail.com",
+      "password": "Him@123",
+      "role": "employer"
+    },
+    {
+      "id": "b43a",
+      "name": "User",
+      "email": "user@gmail.com",
+      "password": "User@123",
+      "role": "jobseeker"
     }
   ],
   "orders": [
@@ -59,6 +78,28 @@
       "status": "active",
       "startDate": "2025-06-19T04:36:12.450Z",
       "expiryDate": "2025-07-19T04:36:12.450Z"
+    },
+    {
+      "id": "4e7c",
+      "userId": "4b90",
+      "name": "Weekly Subscription",
+      "amount": 99,
+      "plan": "weekly",
+      "status": "active",
+      "startDate": "2025-06-22T02:13:17.109Z",
+      "expiryDate": "2025-06-29T02:13:17.109Z"
+    }
+
+  ],
+  "posts": [
+    {
+        "id": 1,
+      "title": "React Developer Application",
+      "description": "I am interested in this job...",
+      "jobSeekerId": 101,
+      "employerId": 201,
+      "dateSent": "2025-06-22T12:00:00Z",
+      "status": "pending"
     }
   ]
 }

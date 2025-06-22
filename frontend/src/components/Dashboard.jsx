@@ -43,6 +43,9 @@ function Dashboard() {
 <li className="nav-item">
   <NavLink className="nav-link" to="/premium">Premium</NavLink>
 </li>
+<li className="nav-item">
+  <NavLink className="nav-link" to="/empdashboard">Employer Dashboard</NavLink>
+</li>
 
             </ul>
             <ul className="navbar-nav">

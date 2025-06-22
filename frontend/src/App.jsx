@@ -13,6 +13,7 @@ import "bootstrap/dist/js/bootstrap.min.js";
 import About from "./components/About";
 import Services from "./components/Services";
 import './App.css'
+import EmployerDashboard from "./components/EmployerDashboard";
 function App() {
   return (
     <Router>
@@ -26,6 +27,8 @@ function App() {
           <Route path="about" element={<About />} />
           <Route path="services" element={<Services />} />
           <Route path="register" element={<Register />} />
+          <Route path="empdashboard" element={<EmployerDashboard />} />
+
         </Route>
       </Routes>
     </Router>
