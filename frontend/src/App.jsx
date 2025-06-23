@@ -7,7 +7,7 @@ import PostJob from "./components/PostJob";
 import Premium from "./components/Premium";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import Dashboard from "./components/dashboard";
+import Dashboard from "./components/Dashboard";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.min.js";
 import About from "./components/About";
