@@ -7,17 +7,31 @@ function PostJob() {
   const [form, setForm] = useState({ title: "", description: "" });
   const [jobs, setJobs] = useState([]);
   const [editId, setEditId] = useState(null);
-
-  const isPremium = user?.premium; // assume true/false
+  const [subscription, setSubscription] = useState(null); // ← holds active subscription
 
   useEffect(() => {
-    if (user?.id) fetchJobs();
+    if (user?.id) {
+      fetchJobs();
+      fetchSubscription();
+    }
   }, []);
 
   const fetchJobs = async () => {
     const res = await axios.get(`http://localhost:3000/jobs?employerId=${user.id}`);
     setJobs(res.data);
   };
+
+  const fetchSubscription = async () => {
+    try {
+      const res = await axios.get(`http://localhost:3000/orders?userId=${user.id}&status=active`);
+      const active = res.data.find(order => new Date(order.expiryDate) > new Date());
+      if (active) setSubscription(active);
+    } catch (err) {
+      console.error("Failed to fetch subscription", err);
+    }
+  };
+
+  const isPremium = !!subscription; // only true if active & not expired
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +45,7 @@ function PostJob() {
     const jobData = {
       ...form,
       employerId: user.id,
-      priority: isPremium ? 1 : 0 // Premium jobs have priority
+      priority: isPremium ? 1 : 0,
     };
 
     if (editId) {
@@ -71,8 +85,12 @@ function PostJob() {
     <div className="container py-4">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2>{editId ? "✏️ Edit Job" : "📝 Post a Job"}</h2>
-        {isPremium && (
-          <span className="badge bg-warning text-dark p-2">🌟 Premium Employer</span>
+        {isPremium ? (
+          <span className="badge bg-success p-2">
+            🌟 Premium (expires {new Date(subscription.expiryDate).toLocaleDateString()})
+          </span>
+        ) : (
+          <span className="badge bg-secondary p-2">Free Employer</span>
         )}
       </div>
 

@@ -16,6 +16,7 @@ import './App.css'
 import EmployerDashboard from "./components/EmployerDashboard";
 import AdminDashboard from "./components/AdminDashboard";
 import AdminJobs from "./components/AdminJobs";
+import AdminPremium from "./components/AdminPremium";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           <Route path="empdashboard" element={<EmployerDashboard />} />
           <Route path="admindashboard" element={<AdminDashboard />} />
           <Route path="adminjobs" element={<AdminJobs />} />
+          <Route path="adminpremium" element={<AdminPremium />} />
 
         </Route>
       </Routes>

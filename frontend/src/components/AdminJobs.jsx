@@ -32,54 +32,71 @@ function AdminJobs() {
   const getUserById = (id) => users.find((u) => u.id === id);
   const employers = users.filter((u) => u.role === "employer");
 
-  const filteredJobs = jobs
+  // 🔍 Filter + Sort Jobs
+  let filteredJobs = jobs
     .filter((job) => {
       const employer = getUserById(job.employerId);
       const query = search.toLowerCase();
       return (
         job.title.toLowerCase().includes(query) ||
+        job.description.toLowerCase().includes(query) ||
         employer?.name?.toLowerCase().includes(query)
       );
-    })
-    .filter((job) => !selectedEmployer || job.employerId === selectedEmployer)
-    .sort((a, b) => {
-      if (sortJobBy === "title") return a.title.localeCompare(b.title);
-      return 0;
     });
 
-  const filteredPosts = posts
+  if (selectedEmployer) {
+    filteredJobs = filteredJobs.filter((job) => job.employerId === selectedEmployer);
+  }
+
+  filteredJobs.sort((a, b) => {
+    if (sortJobBy === "title") return a.title.localeCompare(b.title);
+    if (sortJobBy === "description") return a.description.localeCompare(b.description);
+    if (sortJobBy === "employer") {
+      const empA = getUserById(a.employerId)?.name || "";
+      const empB = getUserById(b.employerId)?.name || "";
+      return empA.localeCompare(empB);
+    }
+    return 0;
+  });
+
+  // 🔍 Filter + Sort Posts
+  let filteredPosts = posts
     .filter((post) => {
       const seeker = getUserById(post.jobSeekerId);
       const query = search.toLowerCase();
       return (
         post.title.toLowerCase().includes(query) ||
+        post.description.toLowerCase().includes(query) ||
         seeker?.name?.toLowerCase().includes(query)
       );
-    })
-    .filter((post) => !selectedEmployer || post.employerId === selectedEmployer)
-    .sort((a, b) => {
-      if (sortPostBy === "status") return a.status.localeCompare(b.status);
-      if (sortPostBy === "date")
-        return new Date(b.dateSent) - new Date(a.dateSent);
-      return 0;
     });
+
+  if (selectedEmployer) {
+    filteredPosts = filteredPosts.filter((post) => post.employerId === selectedEmployer);
+  }
+
+  filteredPosts.sort((a, b) => {
+    if (sortPostBy === "status") return a.status.localeCompare(b.status);
+    if (sortPostBy === "date") return new Date(b.dateSent) - new Date(a.dateSent);
+    return 0;
+  });
 
   return (
     <div className="container my-5">
       <h2 className="text-center mb-4">🛠️ Admin: All Jobs & Applications</h2>
 
-      {/* Filters */}
+      {/* 🔧 Filters */}
       <div className="row mb-4">
-        <div className="col-md-4">
+        <div className="col-md-4 mb-2">
           <input
             type="text"
-            placeholder="🔍 Search by job or user..."
+            placeholder="🔍 Search by job, user, or description..."
             className="form-control"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="col-md-4">
+        <div className="col-md-4 mb-2">
           <select
             className="form-select"
             onChange={(e) => setSelectedEmployer(e.target.value)}
@@ -95,7 +112,7 @@ function AdminJobs() {
         </div>
       </div>
 
-      {/* Posted Jobs */}
+      {/* 🧾 Jobs Section */}
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h4>📢 All Posted Jobs</h4>
         <select
@@ -103,6 +120,8 @@ function AdminJobs() {
           onChange={(e) => setSortJobBy(e.target.value)}
         >
           <option value="title">Sort by Title</option>
+          <option value="description">Sort by Description</option>
+          <option value="employer">Sort by Employer</option>
         </select>
       </div>
       {filteredJobs.length === 0 ? (
@@ -129,7 +148,7 @@ function AdminJobs() {
         </div>
       )}
 
-      {/* Applications */}
+      {/* 📝 Applications Section */}
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h4>📥 All Applications</h4>
         <select

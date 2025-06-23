@@ -95,6 +95,11 @@ function Dashboard() {
                   Admin Dashboard
                 </NavLink>
               </li>
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/adminpremium">
+                  Premium Dashboard
+                </NavLink>
+              </li>
               </>
             )}
           </ul>
