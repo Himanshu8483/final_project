@@ -31,12 +31,12 @@
 }
 
 @keyframes changeImage {
-  0%   { background-image: url('book.jpg'); }
-  20%  { background-image: url('class.jpg'); }
-  40%  { background-image: url('report.jpg'); }
-  60%  { background-image: url('student.jpg'); }
-  80%  { background-image: url('user.jpg'); }
-  100% { background-image: url('school.jpg'); }
+  0%   { background-image: url('/book.jpg'); }
+  20%  { background-image: url('/class.jpg'); }
+  40%  { background-image: url('/report.jpg'); }
+  60%  { background-image: url('/student.jpg'); }
+  80%  { background-image: url('/user.jpg'); }
+  100% { background-image: url('/school.jpg'); }
 }
 
 .center {
