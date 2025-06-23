@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    { "source": "/jobs/:path*", "destination": "https://himanshukush.pythonanywhere.com/jobs/:path*" },
+    { "source": "/users/:path*", "destination": "https://himanshukush.pythonanywhere.com/users/:path*" },
+    { "source": "/applications/:path*", "destination": "https://himanshukush.pythonanywhere.com/applications/:path*" },
+    { "source": "/posts/:path*", "destination": "https://himanshukush.pythonanywhere.com/posts/:path*" },
+    { "source": "/orders/:path*", "destination": "https://himanshukush.pythonanywhere.com/orders/:path*" },
+    { "source": "/create-order", "destination": "https://himanshukush.pythonanywhere.com/create-order" },
+    
+    { "source": "/(.*)", "destination": "/" }
+  ]
+}
