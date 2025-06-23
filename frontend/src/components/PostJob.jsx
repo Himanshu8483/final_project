@@ -17,13 +17,13 @@ function PostJob() {
   }, []);
 
   const fetchJobs = async () => {
-    const res = await axios.get(`http://localhost:3000/jobs?employerId=${user.id}`);
+    const res = await axios.get(`http://localhost:8000/jobs?employerId=${user.id}`);
     setJobs(res.data);
   };
 
   const fetchSubscription = async () => {
     try {
-      const res = await axios.get(`http://localhost:3000/orders?userId=${user.id}&status=active`);
+      const res = await axios.get(`http://localhost:8000/orders?userId=${user.id}&status=active`);
       const active = res.data.find(order => new Date(order.expiryDate) > new Date());
       if (active) setSubscription(active);
     } catch (err) {
@@ -49,10 +49,10 @@ function PostJob() {
     };
 
     if (editId) {
-      await axios.put(`http://localhost:3000/jobs/${editId}`, jobData);
+      await axios.put(`http://localhost:8000/jobs/${editId}/`, jobData);
       alert("Job updated!");
     } else {
-      await axios.post("http://localhost:3000/jobs", jobData);
+      await axios.post("http://localhost:8000/jobs/", jobData);
       alert("Job posted!");
     }
 
@@ -72,7 +72,7 @@ function PostJob() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Delete this job?")) {
-      await axios.delete(`http://localhost:3000/jobs/${id}`);
+      await axios.delete(`http://localhost:8000/jobs/${id}/`);
       fetchJobs();
     }
   };

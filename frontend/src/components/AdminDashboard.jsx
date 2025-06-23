@@ -2,34 +2,34 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 function AdminDashboard() {
-  const [jobseekers, setJobseekers] = useState([]);
-  const [employers, setEmployers] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Pagination state
+  // Separate lists
+  const [employers, setEmployers] = useState([]);
+  const [jobseekers, setJobseekers] = useState([]);
+
+  // Pagination
   const itemsPerPage = 5;
   const [empPage, setEmpPage] = useState(1);
   const [jsPage, setJsPage] = useState(1);
 
   useEffect(() => {
-    fetchUsersOneByOne();
+    fetchUsers();
   }, []);
 
-  const fetchUsersOneByOne = async () => {
+  const fetchUsers = async () => {
     setLoading(true);
     try {
-      const jobRes = await axios.get("http://localhost:3000/users?role=jobseeker");
-      const empRes = await axios.get("http://localhost:3000/users?role=employer");
+      const res = await axios.get("http://localhost:8000/users/");
+      const allUsers = res.data;
 
-      // Use forEach if you want to manually loop through (not needed here, but for demo):
-      const jobList = [];
-      jobRes.data.forEach(js => jobList.push(js));
-      setJobseekers(jobList);
+      const empList = allUsers.filter((u) => u.role === "employer");
+      const jsList = allUsers.filter((u) => u.role === "jobseeker");
 
-      const empList = [];
-      empRes.data.forEach(emp => empList.push(emp));
+      setUsers(allUsers);
       setEmployers(empList);
-
+      setJobseekers(jsList);
     } catch (err) {
       console.error("Error fetching users:", err);
     }
@@ -39,9 +39,9 @@ function AdminDashboard() {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure to delete this user?")) {
       try {
-        await axios.delete(`http://localhost:3000/users/${id}`);
+        await axios.delete(`http://localhost:8000/users/${id}/`);
         alert("User deleted");
-        fetchUsersOneByOne();
+        fetchUsers();
       } catch (err) {
         alert("Error deleting user.");
       }
@@ -107,9 +107,7 @@ function AdminDashboard() {
                 >
                   ⬅ Prev
                 </button>
-                <span>
-                  Page {empPage} of {totalEmpPages}
-                </span>
+                <span>Page {empPage} of {totalEmpPages}</span>
                 <button
                   className="btn btn-outline-secondary btn-sm"
                   disabled={empPage === totalEmpPages}
@@ -122,7 +120,7 @@ function AdminDashboard() {
           )}
 
           {/* Jobseekers Table */}
-          <h4 className="mt-5">👥 Job Seekers</h4>
+          <h4 className="mt-5">👥 Jobseekers</h4>
           {jobseekers.length === 0 ? (
             <p>No jobseekers found.</p>
           ) : (
@@ -166,9 +164,7 @@ function AdminDashboard() {
                 >
                   ⬅ Prev
                 </button>
-                <span>
-                  Page {jsPage} of {totalJsPages}
-                </span>
+                <span>Page {jsPage} of {totalJsPages}</span>
                 <button
                   className="btn btn-outline-secondary btn-sm"
                   disabled={jsPage === totalJsPages}

@@ -19,9 +19,9 @@ function EmployerDashboard() {
   const fetchData = async () => {
     try {
       const [postRes, userRes, jobRes] = await Promise.all([
-        axios.get(`http://localhost:3000/posts`),
-        axios.get("http://localhost:3000/users"),
-        axios.get(`http://localhost:3000/jobs?employerId=${employerId}`)
+        axios.get(`http://localhost:8000/posts`),
+        axios.get("http://localhost:8000/users"),
+        axios.get(`http://localhost:8000/jobs?employerId=${employerId}`)
       ]);
 
       setUsers(userRes.data);
@@ -41,26 +41,29 @@ function EmployerDashboard() {
 
   const getUserDetails = (id) => users.find((u) => u.id === id);
 
-  const updateStatus = async (id, status, interviewDate = "") => {
-    if (status === "accepted" && interviewDate) {
-      const now = new Date();
-      const selectedDate = new Date(interviewDate);
-      if (selectedDate <= now) {
-        alert("Interview date must be in the future.");
-        return;
-      }
-    }
+const updateStatus = async (id, status, interviewDateInput = null) => {
+  const payload = { status };
 
-    try {
-      await axios.patch(`http://localhost:3000/posts/${id}`, {
-        status,
-        interviewDate
-      });
-      fetchData();
-    } catch (err) {
-      console.error("Failed to update status:", err);
+  // Include interviewDate only if defined AND not empty
+  if (interviewDateInput !== null && interviewDateInput !== undefined && interviewDateInput !== "") {
+    const now = new Date();
+    const selectedDate = new Date(interviewDateInput);
+    if (selectedDate <= now) {
+      alert("Interview date must be in the future.");
+      return;
     }
-  };
+    payload.interviewDate = interviewDateInput;
+  } else {
+    payload.interviewDate = null;
+  }
+
+  try {
+    await axios.patch(`http://localhost:8000/posts/${id}/`, payload);
+    fetchData();
+  } catch (err) {
+    console.error("Failed to update status:", err);
+  }
+};
 
   return (
     <div className="container mt-5">
@@ -125,6 +128,85 @@ function EmployerDashboard() {
                       )}
                     </p>
 
+{/* If PENDING: Show Accept & Reject */}
+{post.status === "pending" && (
+  <div className="d-flex gap-2">
+    <button
+      className="btn btn-outline-success btn-sm"
+      onClick={() => updateStatus(post.id, "accepted")}
+    >
+      Accept
+    </button>
+    <button
+      className="btn btn-outline-danger btn-sm"
+      onClick={() => updateStatus(post.id, "rejected")}
+    >
+      Reject
+    </button>
+  </div>
+)}
+
+{/* If ACCEPTED: Show interview field + Set Interview + Reject */}
+{post.status === "accepted" && (
+  <div className="mt-3">
+    <input
+      type="datetime-local"
+      className="form-control mb-2"
+      min={new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16)}
+      value={interviewDate[post.id] || ""}
+      onChange={(e) =>
+        setInterviewDate({
+          ...interviewDate,
+          [post.id]: e.target.value,
+        })
+      }
+    />
+    <div className="d-flex gap-2">
+      <button
+        className="btn btn-primary btn-sm"
+        onClick={() =>
+          updateStatus(post.id, "accepted", interviewDate[post.id])
+        }
+      >
+        Set Interview
+      </button>
+      <button
+        className="btn btn-outline-danger btn-sm"
+        onClick={() => updateStatus(post.id, "rejected")}
+      >
+        Reject
+      </button>
+    </div>
+  </div>
+)}
+
+{/* If REJECTED: Give chance to accept again */}
+{post.status === "rejected" && (
+  <div className="mt-3">
+    <input
+      type="datetime-local"
+      className="form-control mb-2"
+      min={new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16)}
+      value={interviewDate[post.id] || ""}
+      onChange={(e) =>
+        setInterviewDate({
+          ...interviewDate,
+          [post.id]: e.target.value,
+        })
+      }
+    />
+    <button
+      className="btn btn-success btn-sm"
+      onClick={() =>
+        updateStatus(post.id, "accepted", interviewDate[post.id])
+      }
+    >
+      Accept & Set Interview
+    </button>
+  </div>
+)}
+
+{/* 
                     {post.status === "pending" && (
                       <div className="d-flex gap-2">
                         <button
@@ -165,7 +247,9 @@ function EmployerDashboard() {
                           Set Interview
                         </button>
                       </div>
-                    )}
+                    )} */}
+
+                    
                   </div>
                 </div>
               </div>

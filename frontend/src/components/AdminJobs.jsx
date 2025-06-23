@@ -17,9 +17,9 @@ function AdminJobs() {
   const fetchAllData = async () => {
     try {
       const [jobsRes, postsRes, usersRes] = await Promise.all([
-        axios.get("http://localhost:3000/jobs"),
-        axios.get("http://localhost:3000/posts"),
-        axios.get("http://localhost:3000/users"),
+        axios.get("http://localhost:8000/jobs/"),
+        axios.get("http://localhost:8000/posts/"),
+        axios.get("http://localhost:8000/users/"),
       ]);
       setJobs(jobsRes.data);
       setPosts(postsRes.data);
@@ -32,25 +32,27 @@ function AdminJobs() {
   const getUserById = (id) => users.find((u) => u.id === id);
   const employers = users.filter((u) => u.role === "employer");
 
-  // 🔍 Filter + Sort Jobs
-  let filteredJobs = jobs
-    .filter((job) => {
-      const employer = getUserById(job.employerId);
-      const query = search.toLowerCase();
-      return (
-        job.title.toLowerCase().includes(query) ||
-        job.description.toLowerCase().includes(query) ||
-        employer?.name?.toLowerCase().includes(query)
-      );
-    });
+  // Filter + Sort Jobs
+  let filteredJobs = jobs.filter((job) => {
+    const employer = getUserById(job.employerId);
+    const query = search.toLowerCase();
+    return (
+      job.title.toLowerCase().includes(query) ||
+      job.description.toLowerCase().includes(query) ||
+      employer?.name?.toLowerCase().includes(query)
+    );
+  });
 
   if (selectedEmployer) {
-    filteredJobs = filteredJobs.filter((job) => job.employerId === selectedEmployer);
+    filteredJobs = filteredJobs.filter(
+      (job) => job.employerId === parseInt(selectedEmployer)
+    );
   }
 
   filteredJobs.sort((a, b) => {
     if (sortJobBy === "title") return a.title.localeCompare(b.title);
-    if (sortJobBy === "description") return a.description.localeCompare(b.description);
+    if (sortJobBy === "description")
+      return a.description.localeCompare(b.description);
     if (sortJobBy === "employer") {
       const empA = getUserById(a.employerId)?.name || "";
       const empB = getUserById(b.employerId)?.name || "";
@@ -59,25 +61,27 @@ function AdminJobs() {
     return 0;
   });
 
-  // 🔍 Filter + Sort Posts
-  let filteredPosts = posts
-    .filter((post) => {
-      const seeker = getUserById(post.jobSeekerId);
-      const query = search.toLowerCase();
-      return (
-        post.title.toLowerCase().includes(query) ||
-        post.description.toLowerCase().includes(query) ||
-        seeker?.name?.toLowerCase().includes(query)
-      );
-    });
+  // Filter + Sort Posts
+  let filteredPosts = posts.filter((post) => {
+    const seeker = getUserById(post.jobSeekerId);
+    const query = search.toLowerCase();
+    return (
+      post.title?.toLowerCase().includes(query) ||
+      post.description.toLowerCase().includes(query) ||
+      seeker?.name?.toLowerCase().includes(query)
+    );
+  });
 
   if (selectedEmployer) {
-    filteredPosts = filteredPosts.filter((post) => post.employerId === selectedEmployer);
+    filteredPosts = filteredPosts.filter(
+      (post) => post.employerId === parseInt(selectedEmployer)
+    );
   }
 
   filteredPosts.sort((a, b) => {
     if (sortPostBy === "status") return a.status.localeCompare(b.status);
-    if (sortPostBy === "date") return new Date(b.dateSent) - new Date(a.dateSent);
+    if (sortPostBy === "date")
+      return new Date(b.dateSent) - new Date(a.dateSent);
     return 0;
   });
 
@@ -85,7 +89,7 @@ function AdminJobs() {
     <div className="container my-5">
       <h2 className="text-center mb-4">🛠️ Admin: All Jobs & Applications</h2>
 
-      {/* 🔧 Filters */}
+      {/* 🔍 Search & Filter */}
       <div className="row mb-4">
         <div className="col-md-4 mb-2">
           <input
@@ -112,7 +116,7 @@ function AdminJobs() {
         </div>
       </div>
 
-      {/* 🧾 Jobs Section */}
+      {/* 📢 Jobs Section */}
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h4>📢 All Posted Jobs</h4>
         <select
@@ -138,7 +142,7 @@ function AdminJobs() {
                     <p className="card-text">{job.description}</p>
                     <p className="text-muted">
                       👤 Employer: {employer?.name || "Unknown"} <br />
-                      📧 {employer?.email}
+                      📧 {employer?.email || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -148,7 +152,7 @@ function AdminJobs() {
         </div>
       )}
 
-      {/* 📝 Applications Section */}
+      {/* 📥 Applications Section */}
       <div className="d-flex justify-content-between align-items-center mb-2">
         <h4>📥 All Applications</h4>
         <select
@@ -191,7 +195,8 @@ function AdminJobs() {
                         "Not uploaded"
                       )}
                       <br />
-                      🧑‍💼 Employer: {employer?.name} ({employer?.email}) <br />
+                      🧑‍💼 Employer: {employer?.name || "Unknown"} (
+                      {employer?.email || "N/A"}) <br />
                       📅 Applied On:{" "}
                       {new Date(post.dateSent).toLocaleDateString()} <br />
                       🏷️ Status:{" "}

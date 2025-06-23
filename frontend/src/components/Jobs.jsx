@@ -8,6 +8,7 @@ function Jobs() {
   const [showFormId, setShowFormId] = useState(null);
   const [resumeFiles, setResumeFiles] = useState({});
   const [posts, setPosts] = useState([]);
+  const [users, setUsers] = useState([]);
 
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.id;
@@ -16,30 +17,33 @@ function Jobs() {
     fetchJobs();
     fetchApplications();
     fetchPosts();
+    fetchUsers();
   }, []);
 
   const fetchJobs = async () => {
-    const res = await axios.get("http://localhost:3000/jobs");
+    const res = await axios.get("http://localhost:8000/jobs");
     setJobs(res.data);
   };
 
+  const fetchUsers = async () => {
+    const res = await axios.get("http://localhost:8000/users");
+    setUsers(res.data);
+  };
+
   const fetchApplications = async () => {
-    const res = await axios.get(`http://localhost:3000/applications?userId=${userId}`);
+    const res = await axios.get(`http://localhost:8000/applications?userId=${userId}`);
     setApplications(res.data);
   };
 
   const fetchPosts = async () => {
-    const res = await axios.get(`http://localhost:3000/posts?jobSeekerId=${userId}`);
+    const res = await axios.get(`http://localhost:8000/posts?jobSeekerId=${userId}`);
     setPosts(res.data);
   };
 
-  const isApplied = (jobId) => {
-    return applications.some((app) => app.jobId === jobId);
-  };
+  const isApplied = (jobId) => applications.some((app) => app.jobId === jobId);
 
-  const getPostStatus = (jobId) => {
-    return posts.find((p) => p.jobSeekerId === userId && p.jobId === jobId);
-  };
+  const getPostStatus = (jobId) =>
+    posts.find((p) => p.jobSeekerId === userId && p.jobId === jobId);
 
   const handleResumeChange = (jobId, file) => {
     setResumeFiles((prev) => ({ ...prev, [jobId]: file }));
@@ -67,7 +71,7 @@ function Jobs() {
     const alreadyApplied = isApplied(job.id);
     if (alreadyApplied) return;
 
-    await axios.post("http://localhost:3000/applications", {
+    await axios.post("http://localhost:8000/applications/", {
       userId,
       jobId: job.id,
     });
@@ -77,7 +81,7 @@ function Jobs() {
       resumeBase64 = await toBase64(resumeFiles[job.id]);
     }
 
-    await axios.post("http://localhost:3000/posts", {
+    await axios.post("http://localhost:8000/posts/", {
       title: `Application for ${job.title}`,
       description: form[job.id]?.message || "No message provided.",
       resume: resumeBase64,
@@ -94,6 +98,8 @@ function Jobs() {
     setShowFormId(null);
   };
 
+  const getEmployer = (employerId) => users.find((u) => u.id === employerId);
+
   return (
     <div className="container py-4">
       <h2 className="text-center mb-4">📋 Available Jobs</h2>
@@ -101,6 +107,7 @@ function Jobs() {
         {jobs.map((job) => {
           const applied = isApplied(job.id);
           const post = getPostStatus(job.id);
+          const employer = getEmployer(job.employerId);
 
           return (
             <div className="col-md-4 mb-4" key={job.id}>
@@ -108,6 +115,13 @@ function Jobs() {
                 <div className="card-body">
                   <h5 className="card-title">{job.title}</h5>
                   <p className="card-text">{job.description}</p>
+
+                  {employer && (
+                    <div className="text-muted small mb-2">
+                      <strong>Employer:</strong> {employer.name} <br />
+                      <strong>Email:</strong> {employer.email}
+                    </div>
+                  )}
 
                   {post && (
                     <div className="mb-2">

@@ -13,19 +13,15 @@ function AdminPremium() {
   const fetchPremiumData = async () => {
     setLoading(true);
     try {
-      // Fetch orders and users separately (no Promise.all)
-      const ordersRes = await axios.get("http://localhost:3000/orders?status=active");
+      const ordersRes = await axios.get("http://localhost:8000/orders/?status=active/");
       setOrders(ordersRes.data);
 
-      const usersRes = await axios.get("http://localhost:3000/users");
-
-      // Manually map users to object with forEach
-      const map = {};
+      const usersRes = await axios.get("http://localhost:8000/users/");
+      const userMap = {};
       usersRes.data.forEach((user) => {
-        map[user.id] = user;
+        userMap[user.id] = user;
       });
-      setUsersMap(map);
-
+      setUsersMap(userMap);
     } catch (err) {
       console.error("Error fetching premium data:", err);
     } finally {
@@ -33,10 +29,8 @@ function AdminPremium() {
     }
   };
 
-  // Total Revenue Calculation
   const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
 
-  // Breakdown by Plan
   const breakdown = orders.reduce((acc, order) => {
     acc[order.plan] = (acc[order.plan] || 0) + order.amount;
     return acc;
@@ -50,7 +44,6 @@ function AdminPremium() {
         <div className="text-center">Loading...</div>
       ) : (
         <>
-          {/* Summary Section */}
           <div className="row mb-4">
             <div className="col-md-4">
               <div className="card bg-success text-white p-3">
@@ -73,7 +66,6 @@ function AdminPremium() {
             </div>
           </div>
 
-          {/* Active Subscribers Table */}
           <div className="card shadow-sm">
             <div className="card-header bg-dark text-white">🧑‍💼 Active Subscribers</div>
             <div className="table-responsive">
@@ -85,29 +77,33 @@ function AdminPremium() {
                     <th>Amount (₹)</th>
                     <th>Start Date</th>
                     <th>Expiry Date</th>
+                    <th>Transaction Id</th>
                   </tr>
                 </thead>
                 <tbody>
                   {orders.length > 0 ? (
-                    orders.map((order) => {
-                      const user = usersMap[order.userId] || {};
-                      return (
-                        <tr key={order.id}>
-                          <td>
-                            {user.name || user.email || "Unknown"}
-                            <br />
-                            <small className="text-muted">{user.role}</small>
-                          </td>
-                          <td className="text-capitalize">{order.plan}</td>
-                          <td>{order.amount}</td>
-                          <td>{new Date(order.startDate).toLocaleDateString()}</td>
-                          <td>{new Date(order.expiryDate).toLocaleDateString()}</td>
-                        </tr>
-                      );
-                    })
+orders.map((order) => {
+  const user = usersMap[order.user] || {}; // use userId
+  // const user = usersMap[order.userId] || {}; // use userId
+  return (
+    <tr key={order.id}>
+      <td>
+        {user.name || "Unknown"}
+        <br />
+        <small className="text-muted">{user.email}</small>
+      </td>
+      <td className="text-capitalize">{order.plan}</td>
+      <td>{order.amount}</td>
+      <td>{new Date(order.startDate).toLocaleDateString()}</td>
+      <td>{new Date(order.expiryDate).toLocaleDateString()}</td>
+      <td>{order.transactionId}</td>
+    </tr>
+  );
+})
+
                   ) : (
                     <tr>
-                      <td colSpan="5" className="text-center">
+                      <td colSpan="5" className="text-center text-danger">
                         No active subscriptions found.
                       </td>
                     </tr>

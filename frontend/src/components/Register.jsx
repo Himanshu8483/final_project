@@ -12,42 +12,47 @@ function Register() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Handle form field change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Validate input fields
   const validateForm = () => {
     const { name, email, password, role } = form;
-
     if (!name || !email || !password || !role) {
       return "All fields are required.";
     }
 
-    const nameValid = /^[A-Za-z ]+$/.test(form.name);
-    const emailValid = /^[\w.-]+@gmail\.com$/.test(form.email);
-    const passwordValid = /^(?=.*[A-Z])(?=.*\d).{6,}$/.test(form.password);
+    if (!/^[A-Za-z ]+$/.test(name)) {
+      return "Name must only contain letters.";
+    }
 
-    if (!nameValid) return "Name must only contain letters.";
-    if (!emailValid) return "Email must be a valid Gmail address.";
-    if (!passwordValid) return "Password must be 6+ chars with 1 capital & 1 number.";
+    if (!/^[\w.-]+@gmail\.com$/.test(email)) {
+      return "Email must be a valid Gmail address.";
+    }
+
+    if (!/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(password)) {
+      return "Password must be 6+ chars with 1 capital & 1 number.";
+    }
 
     return null;
   };
 
+  // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationError = validateForm();
     if (validationError) return setError(validationError);
 
     try {
-      const res = await axios.get("http://localhost:3000/users");
-      const duplicate = res.data.find((u) => u.email === form.email);
+      // Check for duplicate email
+      const res = await axios.get("http://localhost:8000/users/");
+      const exists = res.data.find((u) => u.email === form.email);
+      if (exists) return setError("Email already registered.");
 
-      if (duplicate) {
-        return setError("Email already registered.");
-      }
-
-      await axios.post("http://localhost:3000/users", form);
+      // Register new user
+      await axios.post("http://localhost:8000/users/", form);
       alert("Registration successful!");
       navigate("/login");
     } catch (err) {
@@ -57,44 +62,54 @@ function Register() {
 
   return (
     <div className="col-md-6 offset-md-3 mt-5">
-      <h2 className="text-center">Registration</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      <form onSubmit={handleSubmit}>
-        <input
-          className="form-control mb-2"
-          name="name"
-          placeholder="Name"
-          onChange={handleChange}
-        />
-        <input
-          className="form-control mb-2"
-          name="email"
-          placeholder="Email (@gmail.com)"
-          onChange={handleChange}
-        />
-        <input
-          className="form-control mb-2"
-          type="password"
-          name="password"
-          placeholder="Password"
-          onChange={handleChange}
-        />
-        <select
-          className="form-control mb-3"
-          name="role"
-          onChange={handleChange}
-        >
-          <option value="">Select Role</option>
-          <option value="employer">Employer</option>
-          <option value="jobseeker">Jobseeker</option>
-        </select>
-        <button className="btn btn-success w-100">Register</button>
-      </form><br />
-      <div className="text-center">
-        <label className="form-label">Already have an account?</label>
-        <Link to="/login" className="btn btn-outline-success w-100 mb-3">
-          Login
-        </Link>
+      <div className="card shadow-sm p-4">
+        <h2 className="text-center mb-3">📝 Register</h2>
+
+        {error && <div className="alert alert-danger">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <input
+            className="form-control mb-2"
+            name="name"
+            placeholder="Full Name"
+            value={form.name}
+            onChange={handleChange}
+          />
+          <input
+            className="form-control mb-2"
+            name="email"
+            placeholder="Email (Gmail only)"
+            value={form.email}
+            onChange={handleChange}
+          />
+          <input
+            className="form-control mb-2"
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+          />
+          <select
+            className="form-control mb-3"
+            name="role"
+            value={form.role}
+            onChange={handleChange}
+          >
+            <option value="">Select Role</option>
+            <option value="employer">Employer</option>
+            <option value="jobseeker">Jobseeker</option>
+          </select>
+
+          <button className="btn btn-success w-100">Register</button>
+        </form>
+
+        <div className="text-center mt-3">
+          <p className="mb-1">Already have an account?</p>
+          <Link to="/login" className="btn btn-outline-primary w-100">
+            Login
+          </Link>
+        </div>
       </div>
     </div>
   );
