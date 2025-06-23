@@ -106,6 +106,13 @@
       "email": "user@gmail.com",
       "password": "User@123",
       "role": "jobseeker"
+    },
+    {
+      "id": "b254",
+      "name": "Himanshu",
+      "email": "kushwaha@gmail.com",
+      "password": "Him@123",
+      "role": "employer"
     }
   ],
   "orders": [
@@ -138,6 +145,16 @@
       "status": "active",
       "startDate": "2025-06-22T03:16:51.289Z",
       "expiryDate": "2025-07-22T03:16:51.289Z"
+    },
+    {
+      "id": "0cf6",
+      "userId": "b254",
+      "name": "Weekly Subscription",
+      "amount": 99,
+      "plan": "weekly",
+      "status": "active",
+      "startDate": "2025-06-22T11:34:17.981Z",
+      "expiryDate": "2025-06-29T11:34:17.981Z"
     }
   ],
   "posts": [

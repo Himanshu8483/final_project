@@ -7,6 +7,7 @@ function EmployerDashboard() {
 
   const [posts, setPosts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [jobs, setJobs] = useState([]);
   const [interviewDate, setInterviewDate] = useState({});
 
   useEffect(() => {
@@ -17,12 +18,22 @@ function EmployerDashboard() {
 
   const fetchData = async () => {
     try {
-      const [postRes, userRes] = await Promise.all([
-        axios.get(`http://localhost:3000/posts?employerId=${employerId}`),
+      const [postRes, userRes, jobRes] = await Promise.all([
+        axios.get(`http://localhost:3000/posts`),
         axios.get("http://localhost:3000/users"),
+        axios.get(`http://localhost:3000/jobs?employerId=${employerId}`)
       ]);
-      setPosts(postRes.data);
+
       setUsers(userRes.data);
+      setJobs(jobRes.data);
+
+      // Only include posts related to this employer's jobs
+      const employerJobIds = jobRes.data.map(job => job.id);
+      const filteredPosts = postRes.data.filter(post =>
+        employerJobIds.includes(post.jobId)
+      );
+
+      setPosts(filteredPosts);
     } catch (err) {
       console.error("Error fetching data:", err);
     }
@@ -34,9 +45,8 @@ function EmployerDashboard() {
     if (status === "accepted" && interviewDate) {
       const now = new Date();
       const selectedDate = new Date(interviewDate);
-
       if (selectedDate <= now) {
-        alert("Interview date must be in the future (after current time).");
+        alert("Interview date must be in the future.");
         return;
       }
     }
@@ -44,7 +54,7 @@ function EmployerDashboard() {
     try {
       await axios.patch(`http://localhost:3000/posts/${id}`, {
         status,
-        interviewDate,
+        interviewDate
       });
       fetchData();
     } catch (err) {
@@ -62,12 +72,13 @@ function EmployerDashboard() {
         <div className="row">
           {posts.map((post) => {
             const seeker = getUserDetails(post.jobSeekerId);
+            const relatedJob = jobs.find(job => job.id === post.jobId);
 
             return (
               <div className="col-md-6 mb-4" key={post.id}>
                 <div className="card shadow-sm">
                   <div className="card-body">
-                    <h5 className="card-title">{post.title}</h5>
+                    <h5 className="card-title">{relatedJob?.title || "Untitled Job"}</h5>
                     <p className="card-text">{post.description}</p>
 
                     <p className="text-muted">
@@ -136,9 +147,7 @@ function EmployerDashboard() {
                         <input
                           type="datetime-local"
                           className="form-control mb-2"
-                          min={new Date(Date.now() + 60 * 1000)
-                            .toISOString()
-                            .slice(0, 16)}
+                          min={new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16)}
                           value={interviewDate[post.id] || ""}
                           onChange={(e) =>
                             setInterviewDate({
@@ -150,11 +159,7 @@ function EmployerDashboard() {
                         <button
                           className="btn btn-primary btn-sm"
                           onClick={() =>
-                            updateStatus(
-                              post.id,
-                              "accepted",
-                              interviewDate[post.id]
-                            )
+                            updateStatus(post.id, "accepted", interviewDate[post.id])
                           }
                         >
                           Set Interview

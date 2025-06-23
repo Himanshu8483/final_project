@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 function PostJob() {
   const user = JSON.parse(localStorage.getItem("user")); // should be employer
@@ -7,36 +8,42 @@ function PostJob() {
   const [jobs, setJobs] = useState([]);
   const [editId, setEditId] = useState(null);
 
+  const isPremium = user?.premium; // assume true/false
+
   useEffect(() => {
     if (user?.id) fetchJobs();
   }, []);
 
-  const fetchJobs = () => {
-    axios.get(`http://localhost:3000/jobs?employerId=${user.id}`)
-      .then(res => setJobs(res.data));
+  const fetchJobs = async () => {
+    const res = await axios.get(`http://localhost:3000/jobs?employerId=${user.id}`);
+    setJobs(res.data);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.title || !form.description) return alert("Please fill all fields");
 
-    const jobData = { ...form, employerId: user.id };
+    if (!isPremium && jobs.length >= 3 && !editId) {
+      alert("You can only post 3 jobs as a free employer. Upgrade to premium!");
+      return;
+    }
+
+    const jobData = {
+      ...form,
+      employerId: user.id,
+      priority: isPremium ? 1 : 0 // Premium jobs have priority
+    };
 
     if (editId) {
-      axios.put(`http://localhost:3000/jobs/${editId}`, jobData)
-        .then(() => {
-          alert("Job updated!");
-          resetForm();
-          fetchJobs();
-        });
+      await axios.put(`http://localhost:3000/jobs/${editId}`, jobData);
+      alert("Job updated!");
     } else {
-      axios.post("http://localhost:3000/jobs", jobData)
-        .then(() => {
-          alert("Job posted!");
-          resetForm();
-          fetchJobs();
-        });
+      await axios.post("http://localhost:3000/jobs", jobData);
+      alert("Job posted!");
     }
+
+    resetForm();
+    fetchJobs();
   };
 
   const resetForm = () => {
@@ -49,9 +56,10 @@ function PostJob() {
     setEditId(job.id);
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Delete this job?")) {
-      axios.delete(`http://localhost:3000/jobs/${id}`).then(fetchJobs);
+      await axios.delete(`http://localhost:3000/jobs/${id}`);
+      fetchJobs();
     }
   };
 
@@ -61,26 +69,56 @@ function PostJob() {
 
   return (
     <div className="container py-4">
-      <h2>{editId ? "Edit Job" : "Post a Job"}</h2>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2>{editId ? "✏️ Edit Job" : "📝 Post a Job"}</h2>
+        {isPremium && (
+          <span className="badge bg-warning text-dark p-2">🌟 Premium Employer</span>
+        )}
+      </div>
+
+      {!isPremium && jobs.length >= 3 && !editId && (
+        <div className="alert alert-warning">
+          <strong>Limit Reached:</strong> Free employers can post only 3 jobs.
+          <br />
+          <Link to="/premium" className="btn btn-sm btn-outline-primary mt-2">
+            Upgrade to Premium Now 🚀
+          </Link>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="mb-4">
-        <input className="form-control mb-2" placeholder="Title" value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })} />
-        <textarea className="form-control mb-2" placeholder="Description" value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })} />
-        <button className="btn btn-success">{editId ? "Update" : "Post"}</button>
+        <input
+          className="form-control mb-2"
+          placeholder="Job Title"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+        />
+        <textarea
+          className="form-control mb-2"
+          placeholder="Job Description"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+        />
+        <button className="btn btn-success" disabled={!isPremium && jobs.length >= 3 && !editId}>
+          {editId ? "Update Job" : "Post Job"}
+        </button>
       </form>
 
       <div className="row">
-        {jobs.map(job => (
+        {jobs.map((job) => (
           <div className="col-md-4 mb-3" key={job.id}>
-            <div className="card">
+            <div className="card h-100 shadow-sm">
               <div className="card-body">
-                <h5>{job.title}</h5>
-                <p>{job.description}</p>
+                <h5 className="card-title">{job.title}</h5>
+                <p className="card-text">{job.description}</p>
               </div>
               <div className="card-footer d-flex justify-content-between">
-                <button className="btn btn-sm btn-primary" onClick={() => handleEdit(job)}>Edit</button>
-                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(job.id)}>Delete</button>
+                <button className="btn btn-sm btn-primary" onClick={() => handleEdit(job)}>
+                  Edit
+                </button>
+                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(job.id)}>
+                  Delete
+                </button>
               </div>
             </div>
           </div>
