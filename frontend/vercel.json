@@ -1,25 +1,24 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/"     },
     {
-      "source": "/users",
-      "destination": "https://himanshukush.pythonanywhere.com/users"
+      "source": "/users/:path*",
+      "destination": "https://himanshukush.pythonanywhere.com/users/:path*"
     },
     {
-      "source": "/applications",
-      "destination": "https://himanshukush.pythonanywhere.com/applications"
+      "source": "/jobs/:path*",
+      "destination": "https://himanshukush.pythonanywhere.com/jobs/:path*"
     },
     {
-      "source": "/posts",
-      "destination": "https://himanshukush.pythonanywhere.com/posts"
+      "source": "/applications/:path*",
+      "destination": "https://himanshukush.pythonanywhere.com/applications/:path*"
     },
     {
-      "source": "/jobs",
-      "destination": "https://himanshukush.pythonanywhere.com/jobs"
+      "source": "/posts/:path*",
+      "destination": "https://himanshukush.pythonanywhere.com/posts/:path*"
     },
     {
-      "source": "/orders",
-      "destination": "https://himanshukush.pythonanywhere.com/orders"
+      "source": "/orders/:path*",
+      "destination": "https://himanshukush.pythonanywhere.com/orders/:path*"
     },
     {
       "source": "/create-order",
