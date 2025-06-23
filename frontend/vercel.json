@@ -1,8 +1,29 @@
 {
   "rewrites": [
+    { "source": "/(.*)", "destination": "/"     },
     {
-      "source": "/:match*",
-      "destination": "https://himanshukush.pythonanywhere.com/:match*"
+      "source": "/users",
+      "destination": "https://himanshukush.pythonanywhere.com/users"
+    },
+    {
+      "source": "/applications",
+      "destination": "https://himanshukush.pythonanywhere.com/applications"
+    },
+    {
+      "source": "/posts",
+      "destination": "https://himanshukush.pythonanywhere.com/posts"
+    },
+    {
+      "source": "/jobs",
+      "destination": "https://himanshukush.pythonanywhere.com/jobs"
+    },
+    {
+      "source": "/orders",
+      "destination": "https://himanshukush.pythonanywhere.com/orders"
+    },
+    {
+      "source": "/create-order",
+      "destination": "https://himanshukush.pythonanywhere.com/create-order"
     }
   ]
 }
