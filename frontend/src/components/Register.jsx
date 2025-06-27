@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
-const API_BASE_URL = "http://localhost:8000";
+// const API_BASE_URL = "http://localhost:8000";
+const API_BASE_URL = "https://himanshukush.pythonanywhere.com"; 
+
 
 function Register() {
   const [form, setForm] = useState({

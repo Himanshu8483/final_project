@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
-const API_BASE_URL = "http://localhost:8000"; // Easily switch for production
+// const API_BASE_URL = "http://localhost:8000"; 
+const API_BASE_URL = "https://himanshukush.pythonanywhere.com"; 
+
 
 function PostJob() {
   const user = JSON.parse(localStorage.getItem("user"));
