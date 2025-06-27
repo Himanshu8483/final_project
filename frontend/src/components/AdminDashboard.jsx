@@ -1,16 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-function AdminDashboard() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+const API_BASE_URL = "http://localhost:8000";
 
-  // Separate lists
+function AdminDashboard() {
   const [employers, setEmployers] = useState([]);
   const [jobseekers, setJobseekers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  
-  // Pagination
+  // Pagination states
   const itemsPerPage = 5;
   const [empPage, setEmpPage] = useState(1);
   const [jsPage, setJsPage] = useState(1);
@@ -22,35 +20,93 @@ function AdminDashboard() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:8000/users/");
-      const allUsers = res.data;
+      const res = await axios.get(`${API_BASE_URL}/users/`);
+      const users = res.data || [];
 
-      const empList = allUsers.filter((u) => u.role === "employer");
-      const jsList = allUsers.filter((u) => u.role === "jobseeker");
-
-      setUsers(allUsers);
-      setEmployers(empList);
-      setJobseekers(jsList);
+      setEmployers(users.filter((u) => u.role === "employer"));
+      setJobseekers(users.filter((u) => u.role === "jobseeker"));
     } catch (err) {
-      console.error("Error fetching users:", err);
+      console.error("Failed to fetch users", err);
     }
     setLoading(false);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure to delete this user?")) {
+    if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        await axios.delete(`http://localhost:8000/users/${id}/`);
-        alert("User deleted");
+        await axios.delete(`${API_BASE_URL}/users/${id}/`);
+        alert("User deleted successfully!");
         fetchUsers();
       } catch (err) {
         alert("Error deleting user.");
+        console.error(err);
       }
     }
   };
 
   const paginate = (data, page) =>
     data.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
+  const renderTable = (data, page, setPage, totalPages, title) => (
+    <>
+      <h4 className="mt-4">{title}</h4>
+      {data.length === 0 ? (
+        <p>No {title.toLowerCase()} found.</p>
+      ) : (
+        <>
+          <div className="table-responsive">
+            <table className="table table-bordered table-hover">
+              <thead className="table-dark">
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginate(data, page).map((user) => (
+                  <tr key={user.id}>
+                    <td>{user.id}</td>
+                    <td>{user.name}</td>
+                    <td>{user.email}</td>
+                    <td>{user.role}</td>
+                    <td>
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDelete(user.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="d-flex justify-content-between mb-4">
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+            >
+              ⬅ Prev
+            </button>
+            <span>Page {page} of {totalPages}</span>
+            <button
+              className="btn btn-outline-secondary btn-sm"
+              disabled={page === totalPages}
+              onClick={() => setPage(page + 1)}
+            >
+              Next ➡
+            </button>
+          </div>
+        </>
+      )}
+    </>
+  );
 
   const totalEmpPages = Math.ceil(employers.length / itemsPerPage);
   const totalJsPages = Math.ceil(jobseekers.length / itemsPerPage);
@@ -63,122 +119,12 @@ function AdminDashboard() {
         <div className="text-center">Loading...</div>
       ) : (
         <>
-          {/* Employers Table */}
-          <h4 className="mt-4">🏢 Employers</h4>
-          {employers.length === 0 ? (
-            <p>No employers found.</p>
-          ) : (
-            <>
-              <div className="table-responsive">
-                <table className="table table-bordered table-hover">
-                  <thead className="table-dark">
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginate(employers, empPage).map((emp) => (
-                      <tr key={emp.id}>
-                        <td>{emp.id}</td>
-                        <td>{emp.name}</td>
-                        <td>{emp.email}</td>
-                        <td>{emp.role}</td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleDelete(emp.id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="d-flex justify-content-between mb-4">
-                <button
-                  className="btn btn-outline-secondary btn-sm"
-                  disabled={empPage === 1}
-                  onClick={() => setEmpPage(empPage - 1)}
-                >
-                  ⬅ Prev
-                </button>
-                <span>Page {empPage} of {totalEmpPages}</span>
-                <button
-                  className="btn btn-outline-secondary btn-sm"
-                  disabled={empPage === totalEmpPages}
-                  onClick={() => setEmpPage(empPage + 1)}
-                >
-                  Next ➡
-                </button>
-              </div>
-            </>
-          )}
-
-          {/* Jobseekers Table */}
-          <h4 className="mt-5">👥 Jobseekers</h4>
-          {jobseekers.length === 0 ? (
-            <p>No jobseekers found.</p>
-          ) : (
-            <>
-              <div className="table-responsive">
-                <table className="table table-bordered table-hover">
-                  <thead className="table-dark">
-                    <tr>
-                      <th>ID</th>
-                      <th>Name</th>
-                      <th>Email</th>
-                      <th>Role</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginate(jobseekers, jsPage).map((js) => (
-                      <tr key={js.id}>
-                        <td>{js.id}</td>
-                        <td>{js.name}</td>
-                        <td>{js.email}</td>
-                        <td>{js.role}</td>
-                        <td>
-                          <button
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleDelete(js.id)}
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="d-flex justify-content-between">
-                <button
-                  className="btn btn-outline-secondary btn-sm"
-                  disabled={jsPage === 1}
-                  onClick={() => setJsPage(jsPage - 1)}
-                >
-                  ⬅ Prev
-                </button>
-                <span>Page {jsPage} of {totalJsPages}</span>
-                <button
-                  className="btn btn-outline-secondary btn-sm"
-                  disabled={jsPage === totalJsPages}
-                  onClick={() => setJsPage(jsPage + 1)}
-                >
-                  Next ➡
-                </button>
-              </div>
-            </>
-          )}
+          {renderTable(employers, empPage, setEmpPage, totalEmpPages, "🏢 Employers")}
+          {renderTable(jobseekers, jsPage, setJsPage, totalJsPages, "👥 Jobseekers")}
         </>
       )}
     </div>
   );
 }
+
 export default AdminDashboard;

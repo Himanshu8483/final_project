@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
+const API_BASE_URL = "http://localhost:8000";
+
 function Register() {
   const [form, setForm] = useState({
     name: "",
@@ -9,10 +11,11 @@ function Register() {
     password: "",
     role: ""
   });
+
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Handle form field change
+  // Handle input changes
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -20,43 +23,45 @@ function Register() {
   // Validate input fields
   const validateForm = () => {
     const { name, email, password, role } = form;
+
     if (!name || !email || !password || !role) {
       return "All fields are required.";
     }
-
     if (!/^[A-Za-z ]+$/.test(name)) {
-      return "Name must only contain letters.";
+      return "Name must contain only letters and spaces.";
     }
-
     if (!/^[\w.-]+@gmail\.com$/.test(email)) {
       return "Email must be a valid Gmail address.";
     }
-
     if (!/^(?=.*[A-Z])(?=.*\d).{6,}$/.test(password)) {
-      return "Password must be 6+ chars with 1 capital & 1 number.";
+      return "Password must be 6+ characters with 1 capital letter and 1 number.";
     }
 
     return null;
   };
 
-  // Handle form submit
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const validationError = validateForm();
     if (validationError) return setError(validationError);
 
     try {
-      // Check for duplicate email
-      const res = await axios.get("http://localhost:8000/users/");
-      const exists = res.data.find((u) => u.email === form.email);
-      if (exists) return setError("Email already registered.");
+      // Check if user already exists
+      const res = await axios.get(`${API_BASE_URL}/users/`);
+      const userExists = res.data.find((user) => user.email === form.email);
 
-      // Register new user
-      await axios.post("http://localhost:8000/users/", form);
+      if (userExists) {
+        return setError("Email already registered.");
+      }
+
+      // Register the new user
+      await axios.post(`${API_BASE_URL}/users/`, form);
       alert("Registration successful!");
       navigate("/login");
     } catch (err) {
-      setError("Registration failed. Please try again.");
+      setError("Something went wrong. Please try again.");
     }
   };
 
@@ -70,6 +75,7 @@ function Register() {
         <form onSubmit={handleSubmit}>
           <input
             className="form-control mb-2"
+            type="text"
             name="name"
             placeholder="Full Name"
             value={form.name}
@@ -77,6 +83,7 @@ function Register() {
           />
           <input
             className="form-control mb-2"
+            type="email"
             name="email"
             placeholder="Email (Gmail only)"
             value={form.email}
@@ -101,7 +108,9 @@ function Register() {
             <option value="jobseeker">Jobseeker</option>
           </select>
 
-          <button className="btn btn-success w-100">Register</button>
+          <button className="btn btn-success w-100" type="submit">
+            Register
+          </button>
         </form>
 
         <div className="text-center mt-3">

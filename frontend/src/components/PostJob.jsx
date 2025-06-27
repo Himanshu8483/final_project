@@ -2,28 +2,37 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 
+const API_BASE_URL = "http://localhost:8000"; // Easily switch for production
+
 function PostJob() {
-  const user = JSON.parse(localStorage.getItem("user")); // should be employer
+  const user = JSON.parse(localStorage.getItem("user"));
   const [form, setForm] = useState({ title: "", description: "" });
   const [jobs, setJobs] = useState([]);
   const [editId, setEditId] = useState(null);
-  const [subscription, setSubscription] = useState(null); // ← holds active subscription
+  const [subscription, setSubscription] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const isEmployer = user?.role === "employer";
 
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && isEmployer) {
       fetchJobs();
       fetchSubscription();
     }
   }, []);
 
   const fetchJobs = async () => {
-    const res = await axios.get(`http://localhost:8000/jobs?employerId=${user.id}`);
-    setJobs(res.data);
+    try {
+      const res = await axios.get(`${API_BASE_URL}/jobs?employerId=${user.id}`);
+      setJobs(res.data);
+    } catch (err) {
+      console.error("Error fetching jobs", err);
+    }
   };
 
   const fetchSubscription = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/orders?userId=${user.id}&status=active`);
+      const res = await axios.get(`${API_BASE_URL}/orders?userId=${user.id}&status=active`);
       const active = res.data.find(order => new Date(order.expiryDate) > new Date());
       if (active) setSubscription(active);
     } catch (err) {
@@ -31,11 +40,29 @@ function PostJob() {
     }
   };
 
-  const isPremium = !!subscription; // only true if active & not expired
+  const isPremium = !!subscription;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title || !form.description) return alert("Please fill all fields");
+    const title = form.title.trim();
+    const description = form.description.trim();
+
+    if (!title || !description) {
+      alert("Please fill in both the job title and description.");
+      return;
+    }
+
+    const isDuplicate = jobs.some(
+      (job) =>
+        job.title.trim().toLowerCase() === title.toLowerCase() &&
+        job.description.trim().toLowerCase() === description.toLowerCase() &&
+        (!editId || job.id !== editId)
+    );
+
+    if (isDuplicate) {
+      alert("This job already exists.");
+      return;
+    }
 
     if (!isPremium && jobs.length >= 3 && !editId) {
       alert("You can only post 3 jobs as a free employer. Upgrade to premium!");
@@ -43,21 +70,29 @@ function PostJob() {
     }
 
     const jobData = {
-      ...form,
+      title,
+      description,
       employerId: user.id,
       priority: isPremium ? 1 : 0,
     };
 
-    if (editId) {
-      await axios.put(`http://localhost:8000/jobs/${editId}/`, jobData);
-      alert("Job updated!");
-    } else {
-      await axios.post("http://localhost:8000/jobs/", jobData);
-      alert("Job posted!");
+    try {
+      setLoading(true);
+      if (editId) {
+        await axios.put(`${API_BASE_URL}/jobs/${editId}/`, jobData);
+        alert("Job updated successfully!");
+      } else {
+        await axios.post(`${API_BASE_URL}/jobs/`, jobData);
+        alert("Job posted successfully!");
+      }
+      resetForm();
+      fetchJobs();
+    } catch (err) {
+      console.error("Error posting job", err);
+      alert("Something went wrong while saving the job.");
+    } finally {
+      setLoading(false);
     }
-
-    resetForm();
-    fetchJobs();
   };
 
   const resetForm = () => {
@@ -72,12 +107,17 @@ function PostJob() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Delete this job?")) {
-      await axios.delete(`http://localhost:8000/jobs/${id}/`);
-      fetchJobs();
+      try {
+        await axios.delete(`${API_BASE_URL}/jobs/${id}/`);
+        fetchJobs();
+      } catch (err) {
+        console.error("Error deleting job", err);
+        alert("Failed to delete job.");
+      }
     }
   };
 
-  if (user?.role !== "employer") {
+  if (!isEmployer) {
     return <div className="text-danger text-center mt-4">Only employers can post jobs.</div>;
   }
 
@@ -117,8 +157,11 @@ function PostJob() {
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
         />
-        <button className="btn btn-success" disabled={!isPremium && jobs.length >= 3 && !editId}>
-          {editId ? "Update Job" : "Post Job"}
+        <button
+          className="btn btn-success"
+          disabled={loading || (!isPremium && jobs.length >= 3 && !editId)}
+        >
+          {loading ? "Submitting..." : editId ? "Update Job" : "Post Job"}
         </button>
       </form>
 

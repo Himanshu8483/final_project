@@ -1,104 +1,97 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-function Jobs() {
-  const [jobs, setJobs] = useState([]);
-  const [applications, setApplications] = useState([]);
-  const [form, setForm] = useState({});
-  const [showFormId, setShowFormId] = useState(null);
-  const [resumeFiles, setResumeFiles] = useState({});
-  const [posts, setPosts] = useState([]);
-  const [users, setUsers] = useState([]);
+const API_BASE_URL = "http://localhost:8000";
 
+function Jobs() {
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = user?.id;
 
+  const [jobs, setJobs] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [applications, setApplications] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [form, setForm] = useState({});
+  const [resumeFiles, setResumeFiles] = useState({});
+  const [showFormId, setShowFormId] = useState(null);
+
   useEffect(() => {
-    fetchJobs();
-    fetchApplications();
-    fetchPosts();
-    fetchUsers();
+    if (userId) fetchAllData();
   }, []);
 
-  const fetchJobs = async () => {
-    const res = await axios.get("http://localhost:8000/jobs");
-    setJobs(res.data);
-  };
+  const fetchAllData = async () => {
+    try {
+      const [jobRes, userRes, appRes, postRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/jobs`),
+        axios.get(`${API_BASE_URL}/users`),
+        axios.get(`${API_BASE_URL}/applications?userId=${userId}`),
+        axios.get(`${API_BASE_URL}/posts?jobSeekerId=${userId}`),
+      ]);
 
-  const fetchUsers = async () => {
-    const res = await axios.get("http://localhost:8000/users");
-    setUsers(res.data);
-  };
-
-  const fetchApplications = async () => {
-    const res = await axios.get(`http://localhost:8000/applications?userId=${userId}`);
-    setApplications(res.data);
-  };
-
-  const fetchPosts = async () => {
-    const res = await axios.get(`http://localhost:8000/posts?jobSeekerId=${userId}`);
-    setPosts(res.data);
+      setJobs(jobRes.data);
+      setUsers(userRes.data);
+      setApplications(appRes.data);
+      setPosts(postRes.data);
+    } catch (err) {
+      console.error("Failed to fetch data:", err);
+    }
   };
 
   const isApplied = (jobId) => applications.some((app) => app.jobId === jobId);
 
-  const getPostStatus = (jobId) =>
-    posts.find((p) => p.jobSeekerId === userId && p.jobId === jobId);
+  const getPost = (jobId) =>
+    posts.find((p) => p.jobId === jobId && p.jobSeekerId === userId);
 
-  const handleResumeChange = (jobId, file) => {
-    setResumeFiles((prev) => ({ ...prev, [jobId]: file }));
-  };
-
-  const handleFormChange = (jobId, field, value) => {
-    setForm({
-      ...form,
-      [jobId]: {
-        ...form[jobId],
-        [field]: value,
-      },
-    });
-  };
+  const getEmployer = (employerId) => users.find((u) => u.id === employerId);
 
   const toBase64 = (file) =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
+      reader.onerror = (err) => reject(err);
     });
 
-  const handleApply = async (job) => {
-    const alreadyApplied = isApplied(job.id);
-    if (alreadyApplied) return;
-
-    await axios.post("http://localhost:8000/applications/", {
-      userId,
-      jobId: job.id,
-    });
-
-    let resumeBase64 = "";
-    if (resumeFiles[job.id]) {
-      resumeBase64 = await toBase64(resumeFiles[job.id]);
-    }
-
-    await axios.post("http://localhost:8000/posts/", {
-      title: `Application for ${job.title}`,
-      description: form[job.id]?.message || "No message provided.",
-      resume: resumeBase64,
-      jobSeekerId: userId,
-      jobId: job.id,
-      employerId: job.employerId,
-      dateSent: new Date().toISOString(),
-      status: "pending",
-    });
-
-    alert("Application submitted!");
-    fetchApplications();
-    fetchPosts();
-    setShowFormId(null);
+  const handleResumeChange = (jobId, file) => {
+    setResumeFiles((prev) => ({ ...prev, [jobId]: file }));
   };
 
-  const getEmployer = (employerId) => users.find((u) => u.id === employerId);
+  const handleFormChange = (jobId, value) => {
+    setForm((prev) => ({ ...prev, [jobId]: { message: value } }));
+  };
+
+  const handleApply = async (job) => {
+    if (isApplied(job.id)) return alert("Already applied!");
+
+    try {
+      await axios.post(`${API_BASE_URL}/applications/`, {
+        userId,
+        jobId: job.id,
+      });
+
+      const resumeBase64 = resumeFiles[job.id]
+        ? await toBase64(resumeFiles[job.id])
+        : "";
+
+      await axios.post(`${API_BASE_URL}/posts/`, {
+        title: `Application for ${job.title}`,
+        description: form[job.id]?.message || "No message provided.",
+        resume: resumeBase64,
+        jobSeekerId: userId,
+        jobId: job.id,
+        employerId: job.employerId,
+        dateSent: new Date().toISOString(),
+        status: "pending",
+      });
+
+      alert("✅ Application submitted!");
+      fetchAllData();
+      setShowFormId(null);
+    } catch (err) {
+      console.error("Error applying:", err);
+      alert("❌ Something went wrong.");
+    }
+  };
 
   return (
     <div className="container py-4">
@@ -106,7 +99,7 @@ function Jobs() {
       <div className="row">
         {jobs.map((job) => {
           const applied = isApplied(job.id);
-          const post = getPostStatus(job.id);
+          const post = getPost(job.id);
           const employer = getEmployer(job.employerId);
 
           return (
@@ -117,10 +110,10 @@ function Jobs() {
                   <p className="card-text">{job.description}</p>
 
                   {employer && (
-                    <div className="text-muted small mb-2">
-                      <strong>Employer:</strong> {employer.name} <br />
-                      <strong>Email:</strong> {employer.email}
-                    </div>
+                    <p className="text-muted small">
+                      👤 <strong>{employer.name}</strong><br />
+                      📧 {employer.email}
+                    </p>
                   )}
 
                   {post && (
@@ -140,40 +133,29 @@ function Jobs() {
                       {post.status === "accepted" && post.interviewDate && (
                         <>
                           <br />
-                          <strong>Interview:</strong>{" "}
-                          {new Date(post.interviewDate).toLocaleString()}
+                          🗓️ Interview: {new Date(post.interviewDate).toLocaleString()}
                         </>
                       )}
                     </div>
                   )}
 
                   {applied ? (
-                    post?.status === "rejected" ? (
-                      <div className="text-danger">❌ Rejected by employer</div>
-                    ) : (
-                      <button className="btn btn-outline-secondary btn-sm" disabled>
-                        ✅ Applied
-                      </button>
-                    )
+                    <button className="btn btn-outline-secondary btn-sm" disabled>
+                      ✅ {post?.status === "rejected" ? "Rejected" : "Applied"}
+                    </button>
                   ) : showFormId === job.id ? (
                     <>
                       <textarea
                         className="form-control mb-2"
                         placeholder="Your message"
-                        onChange={(e) =>
-                          handleFormChange(job.id, "message", e.target.value)
-                        }
-                      ></textarea>
-
+                        onChange={(e) => handleFormChange(job.id, e.target.value)}
+                      />
                       <input
-                        className="form-control mb-2"
                         type="file"
                         accept=".pdf,.doc,.docx"
-                        onChange={(e) =>
-                          handleResumeChange(job.id, e.target.files[0])
-                        }
+                        className="form-control mb-2"
+                        onChange={(e) => handleResumeChange(job.id, e.target.files[0])}
                       />
-
                       <div className="d-flex justify-content-between">
                         <button
                           className="btn btn-success btn-sm"

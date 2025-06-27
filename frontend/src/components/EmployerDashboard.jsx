@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_BASE_URL = "http://localhost:8000";
+
 function EmployerDashboard() {
   const user = JSON.parse(localStorage.getItem("user"));
   const employerId = user?.id;
@@ -19,51 +21,45 @@ function EmployerDashboard() {
   const fetchData = async () => {
     try {
       const [postRes, userRes, jobRes] = await Promise.all([
-        axios.get(`http://localhost:8000/posts`),
-        axios.get("http://localhost:8000/users"),
-        axios.get(`http://localhost:8000/jobs?employerId=${employerId}`)
+        axios.get(`${API_BASE_URL}/posts`),
+        axios.get(`${API_BASE_URL}/users`),
+        axios.get(`${API_BASE_URL}/jobs?employerId=${employerId}`),
       ]);
 
       setUsers(userRes.data);
       setJobs(jobRes.data);
 
-      // Only include posts related to this employer's jobs
-      const employerJobIds = jobRes.data.map(job => job.id);
-      const filteredPosts = postRes.data.filter(post =>
-        employerJobIds.includes(post.jobId)
-      );
-
+      const jobIds = jobRes.data.map(job => job.id);
+      const filteredPosts = postRes.data.filter(post => jobIds.includes(post.jobId));
       setPosts(filteredPosts);
     } catch (err) {
       console.error("Error fetching data:", err);
     }
   };
 
-  const getUserDetails = (id) => users.find((u) => u.id === id);
+  const getUserDetails = (id) => users.find(u => u.id === id);
 
-const updateStatus = async (id, status, interviewDateInput = null) => {
-  const payload = { status };
+  const updateStatus = async (id, status, interviewDateInput = null) => {
+    const payload = { status };
 
-  // Include interviewDate only if defined AND not empty
-  if (interviewDateInput !== null && interviewDateInput !== undefined && interviewDateInput !== "") {
-    const now = new Date();
-    const selectedDate = new Date(interviewDateInput);
-    if (selectedDate <= now) {
-      alert("Interview date must be in the future.");
-      return;
+    if (interviewDateInput) {
+      const now = new Date();
+      const selected = new Date(interviewDateInput);
+      if (selected <= now) {
+        return alert("Interview date must be in the future.");
+      }
+      payload.interviewDate = interviewDateInput;
+    } else {
+      payload.interviewDate = null;
     }
-    payload.interviewDate = interviewDateInput;
-  } else {
-    payload.interviewDate = null;
-  }
 
-  try {
-    await axios.patch(`http://localhost:8000/posts/${id}/`, payload);
-    fetchData();
-  } catch (err) {
-    console.error("Failed to update status:", err);
-  }
-};
+    try {
+      await axios.patch(`${API_BASE_URL}/posts/${id}/`, payload);
+      fetchData();
+    } catch (err) {
+      console.error("Failed to update status:", err);
+    }
+  };
 
   return (
     <div className="container mt-5">
@@ -75,18 +71,18 @@ const updateStatus = async (id, status, interviewDateInput = null) => {
         <div className="row">
           {posts.map((post) => {
             const seeker = getUserDetails(post.jobSeekerId);
-            const relatedJob = jobs.find(job => job.id === post.jobId);
+            const job = jobs.find(j => j.id === post.jobId);
+            const status = post.status;
 
             return (
               <div className="col-md-6 mb-4" key={post.id}>
                 <div className="card shadow-sm">
                   <div className="card-body">
-                    <h5 className="card-title">{relatedJob?.title || "Untitled Job"}</h5>
+                    <h5 className="card-title">{job?.title || "Untitled Job"}</h5>
                     <p className="card-text">{post.description}</p>
-
                     <p className="text-muted">
-                      👤 Name: {seeker?.name || "N/A"} <br />
-                      📧 Email: {seeker?.email || "N/A"} <br />
+                      👤 {seeker?.name || "N/A"} <br />
+                      📧 {seeker?.email || "N/A"} <br />
                       📎 Resume:{" "}
                       {post.resume ? (
                         <a
@@ -103,21 +99,19 @@ const updateStatus = async (id, status, interviewDateInput = null) => {
                       )}
                       <br />
                       📅 Applied On:{" "}
-                      {post.dateSent
-                        ? new Date(post.dateSent).toLocaleDateString()
-                        : "N/A"}
+                      {post.dateSent ? new Date(post.dateSent).toLocaleDateString() : "N/A"}
                       <br />
                       🏷️ Status:{" "}
                       <span
                         className={
-                          post.status === "accepted"
+                          status === "accepted"
                             ? "text-success"
-                            : post.status === "rejected"
+                            : status === "rejected"
                             ? "text-danger"
                             : "text-warning"
                         }
                       >
-                        {post.status}
+                        {status}
                       </span>
                       {post.interviewDate && (
                         <>
@@ -128,85 +122,84 @@ const updateStatus = async (id, status, interviewDateInput = null) => {
                       )}
                     </p>
 
-{/* If PENDING: Show Accept & Reject */}
-{post.status === "pending" && (
-  <div className="d-flex gap-2">
-    <button
-      className="btn btn-outline-success btn-sm"
-      onClick={() => updateStatus(post.id, "accepted")}
-    >
-      Accept
-    </button>
-    <button
-      className="btn btn-outline-danger btn-sm"
-      onClick={() => updateStatus(post.id, "rejected")}
-    >
-      Reject
-    </button>
-  </div>
-)}
+                    {/* Pending Actions */}
+                    {status === "pending" && (
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => updateStatus(post.id, "accepted")}
+                        >
+                          Accept
+                        </button>
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => updateStatus(post.id, "rejected")}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
 
-{/* If ACCEPTED: Show interview field + Set Interview + Reject */}
-{post.status === "accepted" && (
-  <div className="mt-3">
-    <input
-      type="datetime-local"
-      className="form-control mb-2"
-      min={new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16)}
-      value={interviewDate[post.id] || ""}
-      onChange={(e) =>
-        setInterviewDate({
-          ...interviewDate,
-          [post.id]: e.target.value,
-        })
-      }
-    />
-    <div className="d-flex gap-2">
-      <button
-        className="btn btn-primary btn-sm"
-        onClick={() =>
-          updateStatus(post.id, "accepted", interviewDate[post.id])
-        }
-      >
-        Set Interview
-      </button>
-      <button
-        className="btn btn-outline-danger btn-sm"
-        onClick={() => updateStatus(post.id, "rejected")}
-      >
-        Reject
-      </button>
-    </div>
-  </div>
-)}
+                    {/* Accepted Actions */}
+                    {status === "accepted" && (
+                      <div className="mt-3">
+                        <input
+                          type="datetime-local"
+                          className="form-control mb-2"
+                          min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+                          value={interviewDate[post.id] || ""}
+                          onChange={(e) =>
+                            setInterviewDate({
+                              ...interviewDate,
+                              [post.id]: e.target.value,
+                            })
+                          }
+                        />
+                        <div className="d-flex gap-2">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() =>
+                              updateStatus(post.id, "accepted", interviewDate[post.id])
+                            }
+                          >
+                            Set Interview
+                          </button>
+                          <button
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => updateStatus(post.id, "rejected")}
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
-{/* If REJECTED: Give chance to accept again */}
-{post.status === "rejected" && (
-  <div className="mt-3">
-    <input
-      type="datetime-local"
-      className="form-control mb-2"
-      min={new Date(Date.now() + 60 * 1000).toISOString().slice(0, 16)}
-      value={interviewDate[post.id] || ""}
-      onChange={(e) =>
-        setInterviewDate({
-          ...interviewDate,
-          [post.id]: e.target.value,
-        })
-      }
-    />
-    <button
-      className="btn btn-success btn-sm"
-      onClick={() =>
-        updateStatus(post.id, "accepted", interviewDate[post.id])
-      }
-    >
-      Accept & Set Interview
-    </button>
-  </div>
-)}
-
-{/* 
+                    {/* Rejected → Accept again */}
+                    {status === "rejected" && (
+                      <div className="mt-3">
+                        <input
+                          type="datetime-local"
+                          className="form-control mb-2"
+                          min={new Date(Date.now() + 60000).toISOString().slice(0, 16)}
+                          value={interviewDate[post.id] || ""}
+                          onChange={(e) =>
+                            setInterviewDate({
+                              ...interviewDate,
+                              [post.id]: e.target.value,
+                            })
+                          }
+                        />
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() =>
+                            updateStatus(post.id, "accepted", interviewDate[post.id])
+                          }
+                        >
+                          Accept & Set Interview
+                        </button>
+                      </div>
+                    )}
+                    {/* 
                     {post.status === "pending" && (
                       <div className="d-flex gap-2">
                         <button
@@ -249,7 +242,6 @@ const updateStatus = async (id, status, interviewDateInput = null) => {
                       </div>
                     )} */}
 
-                    
                   </div>
                 </div>
               </div>

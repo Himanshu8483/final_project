@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
+const API_BASE_URL = "http://localhost:8000";
+
 function AdminPremium() {
   const [orders, setOrders] = useState([]);
-  const [usersMap, setUsersMap] = useState({});
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,15 +15,12 @@ function AdminPremium() {
   const fetchPremiumData = async () => {
     setLoading(true);
     try {
-      const ordersRes = await axios.get("http://localhost:8000/orders/?status=active/");
-      setOrders(ordersRes.data);
-
-      const usersRes = await axios.get("http://localhost:8000/users/");
-      const userMap = {};
-      usersRes.data.forEach((user) => {
-        userMap[user.id] = user;
-      });
-      setUsersMap(userMap);
+      const [ordersRes, usersRes] = await Promise.all([
+        axios.get(`${API_BASE_URL}/orders/`),
+        axios.get(`${API_BASE_URL}/users/`)
+      ]);
+      setOrders(ordersRes.data || []);
+      setUsers(usersRes.data || []);
     } catch (err) {
       console.error("Error fetching premium data:", err);
     } finally {
@@ -35,6 +34,15 @@ function AdminPremium() {
     acc[order.plan] = (acc[order.plan] || 0) + order.amount;
     return acc;
   }, {});
+
+  const getActiveOrderForUser = (userId) => {
+    const userOrders = orders.filter(
+      (order) => order.user === userId && new Date(order.expiryDate) > new Date()
+    );
+    return userOrders.length > 0
+      ? userOrders.sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0]
+      : null;
+  };
 
   return (
     <div className="container my-5">
@@ -67,7 +75,7 @@ function AdminPremium() {
           </div>
 
           <div className="card shadow-sm">
-            <div className="card-header bg-dark text-white">🧑‍💼 Active Subscribers</div>
+            <div className="card-header bg-dark text-white">🧑‍💼 All Users & Subscriptions</div>
             <div className="table-responsive">
               <table className="table table-bordered mb-0">
                 <thead>
@@ -81,30 +89,30 @@ function AdminPremium() {
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.length > 0 ? (
-orders.map((order) => {
-  const user = usersMap[order.user] || {}; // use userId
-  // const user = usersMap[order.userId] || {}; // use userId
-  return (
-    <tr key={order.id}>
-      <td>
-        {user.name || "Unknown"}
-        <br />
-        <small className="text-muted">{user.email}</small>
-      </td>
-      <td className="text-capitalize">{order.plan}</td>
-      <td>{order.amount}</td>
-      <td>{new Date(order.startDate).toLocaleDateString()}</td>
-      <td>{new Date(order.expiryDate).toLocaleDateString()}</td>
-      <td>{order.transactionId}</td>
-    </tr>
-  );
-})
-
+                  {users.filter(user => user.role === "employer").length > 0 ? (
+                    users
+                      .filter(user => user.role === "employer")
+                      .map((user) => {
+                        const order = getActiveOrderForUser(user.id);
+                        return (
+                          <tr key={user.id}>
+                            <td>
+                              {user.name}
+                              <br />
+                              <small className="text-muted">{user.email}</small>
+                            </td>
+                            <td className="text-capitalize">{order?.plan || "N/A"}</td>
+                            <td>{order?.amount || "—"}</td>
+                            <td>{order ? new Date(order.startDate).toLocaleDateString() : "—"}</td>
+                            <td>{order ? new Date(order.expiryDate).toLocaleDateString() : "—"}</td>
+                            <td>{order?.transactionId || "—"}</td>
+                          </tr>
+                        );
+                      })
                   ) : (
                     <tr>
-                      <td colSpan="5" className="text-center text-danger">
-                        No active subscriptions found.
+                      <td colSpan="6" className="text-center text-danger">
+                        No employers found.
                       </td>
                     </tr>
                   )}

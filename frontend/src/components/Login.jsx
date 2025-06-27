@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 
+// Easily change API base URL
+const API_BASE_URL = "http://localhost:8000";
+
 function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -14,10 +17,12 @@ function Login() {
     name: "Admin User"
   };
 
+  // Handle input change
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Handle login submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     const { email, password } = form;
@@ -28,12 +33,12 @@ function Login() {
 
     let user = null;
 
-    // Admin login check
+    // Check admin login
     if (email === adminUser.email && password === adminUser.password) {
       user = adminUser;
     } else {
       try {
-        const res = await axios.get("http://localhost:8000/users/");
+        const res = await axios.get(`${API_BASE_URL}/users/`);
         user = res.data.find(
           (u) => u.email === email && u.password === password
         );
@@ -46,6 +51,7 @@ function Login() {
       localStorage.setItem("user", JSON.stringify(user));
       alert(`${user.role} login successful!`);
 
+      // Navigate to correct dashboard
       const dashboardPath =
         user.role === "admin"
           ? "/admindashboard"
@@ -84,7 +90,9 @@ function Login() {
             value={form.password}
             onChange={handleChange}
           />
-          <button className="btn btn-primary w-100">Login</button>
+          <button className="btn btn-primary w-100" type="submit">
+            Login
+          </button>
         </form>
 
         <div className="text-center mt-3">

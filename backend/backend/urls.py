@@ -24,16 +24,17 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 router = DefaultRouter()
-router.register('users', UserViewSet)
-router.register('jobs', JobViewSet)
-router.register('applications', ApplicationViewSet)
-router.register('orders', OrderViewSet)
-router.register('posts', PostViewSet)
+
+router.register(r'users', UserViewSet)
+router.register(r'jobs', JobViewSet, basename='job')  
+router.register(r'applications', ApplicationViewSet, basename='application')
+router.register(r'orders', OrderViewSet, basename='order')
+router.register(r'posts', PostViewSet, basename='post')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(router.urls)),
+    path('create-order/', create_order),
     
-    path("create-order/", create_order, name="create_order"),
 
 ]   + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
