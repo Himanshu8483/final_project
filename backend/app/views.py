@@ -39,7 +39,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         queryset = Application.objects.all()
         user_id = self.request.query_params.get('userId')
         if user_id:
-            queryset = queryset.filter(userId__id=user_id)  # ✅ CORRECT
+            queryset = queryset.filter(userId__id=user_id)  
         return queryset
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -50,7 +50,7 @@ class PostViewSet(viewsets.ModelViewSet):
         queryset = Post.objects.all()
         job_seeker_id = self.request.query_params.get('jobSeekerId')
         if job_seeker_id:
-            queryset = queryset.filter(jobSeekerId__id=job_seeker_id)  # ✅ FIXED
+            queryset = queryset.filter(jobSeekerId__id=job_seeker_id)  
         return queryset
 
     

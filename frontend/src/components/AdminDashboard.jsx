@@ -9,6 +9,7 @@ function AdminDashboard() {
   const [employers, setEmployers] = useState([]);
   const [jobseekers, setJobseekers] = useState([]);
 
+  
   // Pagination
   const itemsPerPage = 5;
   const [empPage, setEmpPage] = useState(1);
