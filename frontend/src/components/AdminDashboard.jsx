@@ -2,7 +2,9 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 // const API_BASE_URL = "http://localhost:8000";
-const API_BASE_URL = "https://himanshukush.pythonanywhere.com"; 
+const API_BASE_URL = "https://himanshukush.pythonanywhere.com";
+// const API_BASE_URL = "http://localhost:3000"; 
+
 
 
 function AdminDashboard() {

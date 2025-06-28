@@ -5,6 +5,8 @@ import { useNavigate, Link } from "react-router-dom";
 // Easily change API base URL
 // const API_BASE_URL = "http://localhost:8000";
 const API_BASE_URL = "https://himanshukush.pythonanywhere.com"; 
+// const API_BASE_URL = "http://localhost:3000"; 
+
 
 
 function Login() {

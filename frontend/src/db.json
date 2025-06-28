@@ -34,6 +34,13 @@
       "description": "React",
       "employerId": 4,
       "priority": 0
+    },
+    {
+      "id": "da3d",
+      "title": "APP DEVELOPER",
+      "description": "REACT NATIVE",
+      "employerId": "8e5d",
+      "priority": 0
     }
   ],
   "applications": [
@@ -51,6 +58,11 @@
       "id": "86a1",
       "userId": 3,
       "jobId": "be25"
+    },
+    {
+      "id": "62bb",
+      "userId": "f9c2",
+      "jobId": "da3d"
     }
   ],
   "users": [
@@ -74,6 +86,20 @@
       "email": "rohit@gmail.com",
       "password": "HIm@123",
       "role": "employer"
+    },
+    {
+      "id": "8e5d",
+      "name": "Aditya",
+      "email": "adi@gmail.com",
+      "password": "Him@123",
+      "role": "employer"
+    },
+    {
+      "id": "f9c2",
+      "name": "seeker",
+      "email": "seeker@gmail.com",
+      "password": "Him@123",
+      "role": "jobseeker"
     }
   ],
   "orders": [
@@ -143,6 +169,17 @@
       "jobId": "be25",
       "employerId": "6a7f",
       "dateSent": "2025-06-23T07:58:05.170Z",
+      "status": "pending"
+    },
+    {
+      "id": "0aa8",
+      "title": "Application for APP DEVELOPER",
+      "description": "No message provided.",
+      "resume": "",
+      "jobSeekerId": "f9c2",
+      "jobId": "da3d",
+      "employerId": "8e5d",
+      "dateSent": "2025-06-28T06:51:13.259Z",
       "status": "pending"
     }
   ]
