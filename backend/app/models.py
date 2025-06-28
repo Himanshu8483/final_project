@@ -47,13 +47,7 @@ class Post(models.Model):
         return f"{self.title} - {self.status}"
 
 
-# class Order(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
-#     plan = models.CharField(max_length=20)
-#     amount = models.IntegerField()
-#     status = models.CharField(max_length=20)
-#     start_date = models.DateTimeField(null=True)
-#     expiry_date = models.DateTimeField(null=True)
+
 class Order(models.Model):
     PLAN_CHOICES = [
         ('weekly', 'Weekly'),
